@@ -6,7 +6,7 @@
               buildAUv3="0" buildRTAS="0" buildAAX="0" pluginName="Voice-To-Midi"
               pluginDesc="VoiceToMidiController" pluginManufacturer="yourcompany"
               pluginManufacturerCode="Manu" pluginCode="Jdvz" pluginChannelConfigs=""
-              pluginIsSynth="0" pluginWantsMidiIn="0" pluginProducesMidiOut="0"
+              pluginIsSynth="0" pluginWantsMidiIn="0" pluginProducesMidiOut="1"
               pluginIsMidiEffectPlugin="0" pluginEditorRequiresKeys="0" pluginAUExportPrefix="VoiceToMidiControllerAU"
               pluginRTASCategory="" aaxIdentifier="com.yourcompany.VoiceToMidiController"
               pluginAAXCategory="AAX_ePlugInCategory_Dynamics" jucerVersion="4.3.1">

@@ -25,7 +25,35 @@ VoiceToMidiControllerAudioProcessor::VoiceToMidiControllerAudioProcessor()
                        )
 #endif
 {
-    midiOutput_ = MidiOutput::createNewDevice("VoiceToMidi Output");
+    
+
+    // Only output on virtual midi port if this is not windows
+    #if JUCE_LINUX || JUCE_MAC || JUCE_IOS || DOXYGEN
+    
+    // Check for instances of the VoiceToMidi and increment the
+    // instance count for identifying this instance.
+    int instance = 1;
+    StringArray activeDevices = MidiInput::getDevices();
+    
+    for (auto device = activeDevices.begin(); device != activeDevices.end(); ++device)
+    {
+        std::string deviceName = device->toStdString();
+        std::size_t found = deviceName.find("VoiceToMidi ");
+        if (found != std::string::npos)
+        {
+            // Extract the instance number and increment this instance
+            int instanceCount = 0;
+            std::string name = "";
+            std::stringstream stream(deviceName);
+            stream >> name >> instanceCount;
+            instance = instanceCount + 1;
+        }
+    }
+    
+    // Create a new device
+    midiOutput_ = MidiOutput::createNewDevice("VoiceToMidi " + std::to_string(instance));
+    
+    #endif
 }
 
 VoiceToMidiControllerAudioProcessor::~VoiceToMidiControllerAudioProcessor()
@@ -144,6 +172,15 @@ void VoiceToMidiControllerAudioProcessor::processBlock (AudioSampleBuffer& buffe
 
         // ..do something to the data...
     }
+    
+    // Create and output midi here. Send the message out on midiMessages as well
+    // as on the virtual midi port if this is not Windows
+    #if JUCE_LINUX || JUCE_MAC || JUCE_IOS || DOXYGEN
+    
+    // Send out on the virtual midi port here
+    
+    #endif
+    
 }
 
 //==============================================================================
