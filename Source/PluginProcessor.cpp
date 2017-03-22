@@ -212,6 +212,25 @@ void VoiceToMidiControllerAudioProcessor::setStateInformation (const void* data,
 }
 
 //==============================================================================
+float VoiceToMidiControllerAudioProcessor::getDetectedPitch()
+{
+    float pitch = pitchDetection_->getPitch();
+    
+    if (pitch > 0)
+    {
+        pitch = getSampleRate() / pitch;
+    }
+    else
+    {
+        pitch = 0;
+    }
+    
+    return pitch;
+}
+
+
+
+//==============================================================================
 // This creates new instances of the plugin..
 AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {

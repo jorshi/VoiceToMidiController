@@ -11,12 +11,12 @@
 #include "PitchDetection.h"
 
 
-PitchDetection::PitchDetection(int length) : bufferSize_(length), readPos_(0)
+PitchDetection::PitchDetection(int bufferSize) : readPos_(0)
 {
     // Assumming that the length passed in will be a multiple of 2
     // Allocate half the buffer size length for the yin data sample buffer
-    yinData_.setSize(1, bufferSize_/2);
-    inputBuffer_.setSize(1, bufferSize_);
+    yinData_.setSize(1, bufferSize/2);
+    inputBuffer_.setSize(1, bufferSize);
     
     // YIN default tolerance was 0.15
     tolerance_ = 0.15;
@@ -54,6 +54,27 @@ void PitchDetection::runDetection(const float *samples, int numSamples)
     }
 }
 
+
+float PitchDetection::quadIntMin(int position)
+{
+    float s0, s1, s2;
+    const float* data = yinData_.getReadPointer(0);
+    
+    // TODO: remove this -- the origin algorithm did some more checks
+    // on the posistion, but I think it is safe to assume that position
+    // received here will be a valid index in yinData
+    jassert(position >= 0 && position < yinData_.getNumSamples());
+    
+    if (position == 0 || position == yinData_.getNumSamples() - 1)
+        return position;
+    
+    s0 = data[position - 1];
+    s1 = data[position];
+    s2 = data[position + 1];
+    
+    return position + 0.5 * (s0 - s2) / (s0 - 2 * s1 + s2);
+}
+
 // Implementation of the YIN algorithm
 void PitchDetection::updatePitch()
 {
@@ -89,7 +110,7 @@ void PitchDetection::updatePitch()
         period = tau - 3;
         if (tau > 4 && yin[period] < tolerance_ && yin[period] < yin[period+1])
         {
-            // Run Quadric Interpolation
+            detectedPitch_ = quadIntMin(period);
             break;
         }
     }
@@ -98,6 +119,8 @@ void PitchDetection::updatePitch()
     {
         // Run Quadtatic Interpolation on minimum element
         float* minElement = std::min(yin, yin + yinData_.getNumSamples());
-        int position = minElement - yin;
+        detectedPitch_ = quadIntMin(minElement - yin);
     }
+    
+    pitch_ = detectedPitch_;
 }

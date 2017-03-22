@@ -59,6 +59,8 @@ public:
     //==============================================================================
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+    
+    float getDetectedPitch();
 
 private:
     //==============================================================================

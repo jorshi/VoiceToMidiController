@@ -18,7 +18,7 @@ class PitchDetection
 public:
     
     //Constuctor
-    PitchDetection(int length);
+    PitchDetection(int bufferSize);
     
     // Deconstructor
     ~PitchDetection();
@@ -26,15 +26,21 @@ public:
     // Pass new samples into detection function
     void runDetection(const float* samples, int numSamples);
     
+    // Get the current estimation for pitch
+    float getPitch() const { return pitch_; };
+    
 private:
     
     // Updates the pitch calculation using samples in the input buffer
     void updatePitch();
     
-    int bufferSize_;
-    int yinLengh_;
+    // Quadratic interpolation on the Yin buffer
+    float quadIntMin(int position);
+    
+    // Read pointer for input buffer
     int readPos_;
 
+    // Pitch tolerance and the current detected pitch estimation
     float tolerance_;
     float pitch_;
 
