@@ -12,6 +12,8 @@
 #define PLUGINPROCESSOR_H_INCLUDED
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include "PitchDetection.h"
+
 #include <string>
 #include <sstream>
 
@@ -63,6 +65,7 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (VoiceToMidiControllerAudioProcessor)
     
     ScopedPointer<MidiOutput> midiOutput_;
+    ScopedPointer<PitchDetection> pitchDetection_;
 };
 
 

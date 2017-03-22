@@ -17,14 +17,30 @@ class PitchDetection
 {
 public:
     
-    //Default Constructor
-    PitchDetection();
+    //Constuctor
+    PitchDetection(int length);
     
     // Deconstructor
     ~PitchDetection();
     
+    // Pass new samples into detection function
+    void runDetection(const float* samples, int numSamples);
+    
 private:
     
+    // Updates the pitch calculation using samples in the input buffer
+    void updatePitch();
+    
+    int bufferSize_;
+    int yinLengh_;
+    int readPos_;
+
+    float tolerance_;
+    float pitch_;
+
+    // Buffer used in calculation of pitch
+    AudioBuffer<float> yinData_;
+    AudioBuffer<float> inputBuffer_;
 };
 
 
