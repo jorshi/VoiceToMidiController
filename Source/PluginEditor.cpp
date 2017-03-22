@@ -28,12 +28,12 @@ VoiceToMidiControllerAudioProcessorEditor::~VoiceToMidiControllerAudioProcessorE
 //==============================================================================
 void VoiceToMidiControllerAudioProcessorEditor::paint (Graphics& g)
 {
-    String pitch = std::to_string(processor.getDetectedPitch());
+    String pitch = std::to_string(processor.getDetectedMidiNote());
     
     g.fillAll (Colours::white);
 
     g.setColour (Colours::black);
-    g.setFont (15.0f);
+    g.setFont (50.0f);
     g.drawFittedText (pitch, getLocalBounds(), Justification::centred, 1);
 }
 

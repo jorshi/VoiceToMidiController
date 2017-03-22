@@ -171,10 +171,10 @@ void VoiceToMidiControllerAudioProcessor::processBlock (AudioSampleBuffer& buffe
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         float* channelData = buffer.getWritePointer (channel);
-        
-        // Pass samples in for pitch detection
-        pitchDetection_->runDetection(channelData, buffer.getNumSamples());
     }
+    
+    // Pass samples in for pitch detection -- only run on the first channel right now
+    pitchDetection_->runDetection(buffer.getReadPointer(0), buffer.getNumSamples());
     
     // Create and output midi here. Send the message out on midiMessages as well
     // as on the virtual midi port if this is not Windows
@@ -212,7 +212,7 @@ void VoiceToMidiControllerAudioProcessor::setStateInformation (const void* data,
 }
 
 //==============================================================================
-float VoiceToMidiControllerAudioProcessor::getDetectedPitch()
+float VoiceToMidiControllerAudioProcessor::getDetectedF0()
 {
     float pitch = pitchDetection_->getPitch();
     
@@ -226,6 +226,23 @@ float VoiceToMidiControllerAudioProcessor::getDetectedPitch()
     }
     
     return pitch;
+}
+
+int VoiceToMidiControllerAudioProcessor::getDetectedMidiNote()
+{
+    float pitch = getDetectedF0();
+    int midiNote;
+    
+    if (pitch > 0.0f)
+    {
+        midiNote = roundToInt(69 + 12*log2(pitch / 440));
+    }
+    else
+    {
+        midiNote = -1;
+    }
+    
+    return midiNote;
 }
 
 
