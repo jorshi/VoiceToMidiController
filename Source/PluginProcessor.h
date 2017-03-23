@@ -70,7 +70,11 @@ private:
     ScopedPointer<MidiOutput> midiOutput_;
     ScopedPointer<PitchDetection> pitchDetection_;
     
+    // Midi messages to facilitate switching between notes
     MidiMessage playingNote;
+    MidiMessage nextNote;
+    MidiMessage noteOff;
+    
     bool isPlaying;
     
     const double startTime;

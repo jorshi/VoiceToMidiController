@@ -25,8 +25,13 @@ VoiceToMidiControllerAudioProcessor::VoiceToMidiControllerAudioProcessor()
                        ), startTime(Time::getMillisecondCounterHiRes() * 0.001)
 #endif
 {
+    // Not playing on startup
+    isPlaying = false;
     
-
+    // Pitch detection object
+    pitchDetection_ = new PitchDetection(1024);
+    
+    
     // Only output on virtual midi port if this is not windows
     #if JUCE_LINUX || JUCE_MAC || JUCE_IOS || DOXYGEN
     
@@ -52,12 +57,6 @@ VoiceToMidiControllerAudioProcessor::VoiceToMidiControllerAudioProcessor()
     
     // Create a new device
     midiOutput_ = MidiOutput::createNewDevice("VoiceToMidi " + std::to_string(instance));
-    
-    // Not playing on startup
-    isPlaying = false;
-    
-    // Pitch detection object
-    pitchDetection_ = new PitchDetection(1024);
     
     #endif
 }
@@ -178,32 +177,44 @@ void VoiceToMidiControllerAudioProcessor::processBlock (AudioSampleBuffer& buffe
     
     // Pass samples in for pitch detection -- only run on the first channel right now
     pitchDetection_->runDetection(buffer.getReadPointer(0), buffer.getNumSamples());
-    
+ 
+    // Crude onset detection using changes in the pitch.
     int midiNote;
     if ((midiNote = getDetectedMidiNote()) > 0)
     {
         double timeNow = Time::getMillisecondCounterHiRes() * 0.001;
         
+        // Not currently playing a note, make a new one
         if (!isPlaying)
         {
             playingNote = MidiMessage::noteOn(1, midiNote, (uint8)100);
             playingNote.setTimeStamp(timeNow - startTime);
-            midiOutput_->sendMessageNow(playingNote);
+            midiMessages.addEvent(playingNote, 0);
             isPlaying = true;
+        }
+        else if (midiNote != playingNote.getNoteNumber())
+        {
+            nextNote = MidiMessage::noteOn(1, midiNote, (uint8)100);
+            nextNote.setTimeStamp(timeNow - startTime);
+            midiMessages.addEvent(nextNote, 0);
+          
+            // Also turn off current note
+            midiMessages.addEvent(MidiMessage::noteOff(playingNote.getChannel(),
+                                                       playingNote.getNoteNumber()), 1);
+            
+            playingNote = nextNote;
         }
     }
     else if (isPlaying)
     {
-        midiOutput_->sendMessageNow(MidiMessage::noteOff(playingNote.getChannel(),
-                                                         playingNote.getNoteNumber()));
+        midiMessages.addEvent(MidiMessage::noteOff(playingNote.getChannel(),
+                                                   playingNote.getNoteNumber()), 1);
         isPlaying = false;
     }
 
-    
-    // Create and output midi here. Send the message out on midiMessages as well
-    // as on the virtual midi port if this is not Windows
+    // Send out on the virtual midi port if it is available
     #if JUCE_LINUX || JUCE_MAC || JUCE_IOS || DOXYGEN
-    
+    midiOutput_->sendBlockOfMessagesNow(midiMessages);
     #endif
 }
 
