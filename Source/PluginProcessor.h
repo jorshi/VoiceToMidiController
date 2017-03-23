@@ -69,6 +69,12 @@ private:
     
     ScopedPointer<MidiOutput> midiOutput_;
     ScopedPointer<PitchDetection> pitchDetection_;
+    
+    MidiMessage playingNote;
+    bool isPlaying;
+    
+    const double startTime;
+    double noteTime;
 };
 
 

@@ -22,7 +22,7 @@ VoiceToMidiControllerAudioProcessor::VoiceToMidiControllerAudioProcessor()
                       #endif
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ), startTime(Time::getMillisecondCounterHiRes() * 0.001)
 #endif
 {
     
@@ -52,6 +52,9 @@ VoiceToMidiControllerAudioProcessor::VoiceToMidiControllerAudioProcessor()
     
     // Create a new device
     midiOutput_ = MidiOutput::createNewDevice("VoiceToMidi " + std::to_string(instance));
+    
+    // Not playing on startup
+    isPlaying = false;
     
     // Pitch detection object
     pitchDetection_ = new PitchDetection(1024);
@@ -176,14 +179,32 @@ void VoiceToMidiControllerAudioProcessor::processBlock (AudioSampleBuffer& buffe
     // Pass samples in for pitch detection -- only run on the first channel right now
     pitchDetection_->runDetection(buffer.getReadPointer(0), buffer.getNumSamples());
     
+    int midiNote;
+    if ((midiNote = getDetectedMidiNote()) > 0)
+    {
+        double timeNow = Time::getMillisecondCounterHiRes() * 0.001;
+        
+        if (!isPlaying)
+        {
+            playingNote = MidiMessage::noteOn(1, midiNote, (uint8)100);
+            playingNote.setTimeStamp(timeNow - startTime);
+            midiOutput_->sendMessageNow(playingNote);
+            isPlaying = true;
+        }
+    }
+    else if (isPlaying)
+    {
+        midiOutput_->sendMessageNow(MidiMessage::noteOff(playingNote.getChannel(),
+                                                         playingNote.getNoteNumber()));
+        isPlaying = false;
+    }
+
+    
     // Create and output midi here. Send the message out on midiMessages as well
     // as on the virtual midi port if this is not Windows
     #if JUCE_LINUX || JUCE_MAC || JUCE_IOS || DOXYGEN
     
-    // Send out on the virtual midi port here
-    
     #endif
-    
 }
 
 //==============================================================================
