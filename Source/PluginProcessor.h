@@ -12,6 +12,8 @@
 #define PLUGINPROCESSOR_H_INCLUDED
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include "PitchDetection.h"
+
 #include <string>
 #include <sstream>
 
@@ -57,12 +59,26 @@ public:
     //==============================================================================
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+    
+    float getDetectedF0();
+    int getDetectedMidiNote();
 
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (VoiceToMidiControllerAudioProcessor)
     
     ScopedPointer<MidiOutput> midiOutput_;
+    ScopedPointer<PitchDetection> pitchDetection_;
+    
+    // Midi messages to facilitate switching between notes
+    MidiMessage playingNote;
+    MidiMessage nextNote;
+    MidiMessage noteOff;
+    
+    bool isPlaying;
+    
+    const double startTime;
+    double noteTime;
 };
 
 

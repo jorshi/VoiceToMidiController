@@ -12,6 +12,10 @@
               pluginAAXCategory="AAX_ePlugInCategory_Dynamics" jucerVersion="4.3.1">
   <MAINGROUP id="V6je0U" name="VoiceToMidiController">
     <GROUP id="{3A5063AC-C957-4AF1-C28A-15FA24E3A48A}" name="Source">
+      <FILE id="b2U8WQ" name="PitchDetection.cpp" compile="1" resource="0"
+            file="Source/PitchDetection.cpp"/>
+      <FILE id="HxkXhL" name="PitchDetection.h" compile="0" resource="0"
+            file="Source/PitchDetection.h"/>
       <FILE id="PkjiCT" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="B0dYiA" name="PluginProcessor.h" compile="0" resource="0"

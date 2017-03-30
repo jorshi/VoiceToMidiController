@@ -18,7 +18,8 @@
 //==============================================================================
 /**
 */
-class VoiceToMidiControllerAudioProcessorEditor  : public AudioProcessorEditor
+class VoiceToMidiControllerAudioProcessorEditor  : public AudioProcessorEditor,
+                                                   private Timer
 {
 public:
     VoiceToMidiControllerAudioProcessorEditor (VoiceToMidiControllerAudioProcessor&);
@@ -29,6 +30,8 @@ public:
     void resized() override;
 
 private:
+    void timerCallback() override;
+    
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     VoiceToMidiControllerAudioProcessor& processor;

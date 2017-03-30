@@ -22,11 +22,16 @@ VoiceToMidiControllerAudioProcessor::VoiceToMidiControllerAudioProcessor()
                       #endif
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ), startTime(Time::getMillisecondCounterHiRes() * 0.001)
 #endif
 {
+    // Not playing on startup
+    isPlaying = false;
     
-
+    // Pitch detection object
+    pitchDetection_ = new PitchDetection(1024);
+    
+    
     // Only output on virtual midi port if this is not windows
     #if JUCE_LINUX || JUCE_MAC || JUCE_IOS || DOXYGEN
     
@@ -164,23 +169,53 @@ void VoiceToMidiControllerAudioProcessor::processBlock (AudioSampleBuffer& buffe
     for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
+    // Processing block
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         float* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
     }
     
-    // Create and output midi here. Send the message out on midiMessages as well
-    // as on the virtual midi port if this is not Windows
+    // Pass samples in for pitch detection -- only run on the first channel right now
+    pitchDetection_->runDetection(buffer.getReadPointer(0), buffer.getNumSamples());
+ 
+    // Crude onset detection using changes in the pitch.
+    int midiNote;
+    if ((midiNote = getDetectedMidiNote()) > 0)
+    {
+        double timeNow = Time::getMillisecondCounterHiRes() * 0.001;
+        
+        // Not currently playing a note, make a new one
+        if (!isPlaying)
+        {
+            playingNote = MidiMessage::noteOn(1, midiNote, (uint8)100);
+            playingNote.setTimeStamp(timeNow - startTime);
+            midiMessages.addEvent(playingNote, 0);
+            isPlaying = true;
+        }
+        else if (midiNote != playingNote.getNoteNumber())
+        {
+            nextNote = MidiMessage::noteOn(1, midiNote, (uint8)100);
+            nextNote.setTimeStamp(timeNow - startTime);
+            midiMessages.addEvent(nextNote, 0);
+          
+            // Also turn off current note
+            midiMessages.addEvent(MidiMessage::noteOff(playingNote.getChannel(),
+                                                       playingNote.getNoteNumber()), 1);
+            
+            playingNote = nextNote;
+        }
+    }
+    else if (isPlaying)
+    {
+        midiMessages.addEvent(MidiMessage::noteOff(playingNote.getChannel(),
+                                                   playingNote.getNoteNumber()), 1);
+        isPlaying = false;
+    }
+
+    // Send out on the virtual midi port if it is available
     #if JUCE_LINUX || JUCE_MAC || JUCE_IOS || DOXYGEN
-    
-    // Send out on the virtual midi port here
-    
+    midiOutput_->sendBlockOfMessagesNow(midiMessages);
     #endif
-    
 }
 
 //==============================================================================
@@ -207,6 +242,42 @@ void VoiceToMidiControllerAudioProcessor::setStateInformation (const void* data,
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
 }
+
+//==============================================================================
+float VoiceToMidiControllerAudioProcessor::getDetectedF0()
+{
+    float pitch = pitchDetection_->getPitch();
+    
+    if (pitch > 0)
+    {
+        pitch = getSampleRate() / pitch;
+    }
+    else
+    {
+        pitch = 0;
+    }
+    
+    return pitch;
+}
+
+int VoiceToMidiControllerAudioProcessor::getDetectedMidiNote()
+{
+    float pitch = getDetectedF0();
+    int midiNote;
+    
+    if (pitch > 0.0f)
+    {
+        midiNote = roundToInt(69 + 12*log2(pitch / 440));
+    }
+    else
+    {
+        midiNote = -1;
+    }
+    
+    return midiNote;
+}
+
+
 
 //==============================================================================
 // This creates new instances of the plugin..
