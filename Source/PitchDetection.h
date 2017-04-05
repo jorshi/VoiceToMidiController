@@ -12,6 +12,8 @@
 #define PITCHDETECTION_H_INCLUDED
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include <numeric>
+#include <algorithm>
 
 class PitchDetection
 {
@@ -27,7 +29,16 @@ public:
     void runDetection(const float* samples, int numSamples);
     
     // Get the current estimation for pitch
-    float getPitch() const { return pitch_; };
+    float getCurrentPitch() const { return detectedF0_[f0Pointer_]; };
+    
+    // Get an averaged pitch
+    float getSmoothedPitch(int smoothingFactor) const;
+
+    // Some defined parameters for pitch detection
+    enum
+    {
+        maxFreqSmoothing = 100
+    };
     
 private:
     
@@ -47,6 +58,9 @@ private:
     // Buffer used in calculation of pitch
     AudioBuffer<float> yinData_;
     AudioBuffer<float> inputBuffer_;
+    
+    Array<float> detectedF0_;
+    int f0Pointer_;
 };
 
 

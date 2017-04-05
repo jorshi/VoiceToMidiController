@@ -22,6 +22,9 @@ PitchDetection::PitchDetection(int bufferSize) : readPos_(0)
     tolerance_ = 0.15;
     
     pitch_ = -1.0;
+    
+    detectedF0_.resize(maxFreqSmoothing);
+    f0Pointer_ = 0;
 }
 
 
@@ -51,6 +54,40 @@ void PitchDetection::runDetection(const float *samples, int numSamples)
             readPos_++;
             samplesRead++;
         }
+    }
+}
+
+float PitchDetection::getSmoothedPitch(int smoothingFactor) const
+{
+    smoothingFactor = std::min(smoothingFactor, (int)maxFreqSmoothing);
+    if (smoothingFactor < 2)
+    {
+        return getCurrentPitch();
+    }
+
+    int avgNum = 0;
+    float sum = 0.0f;
+    float pitch;
+    float smoothed;
+
+    for (int i = 0; i < smoothingFactor; ++i)
+    {
+        pitch = detectedF0_[(f0Pointer_ + i) % detectedF0_.size()];
+        if (pitch >= 0)
+        {
+            sum += pitch;
+            avgNum++;
+        }
+    }
+    
+    smoothed = sum / avgNum;
+    if (smoothed > 0)
+    {
+        return smoothed;
+    }
+    else
+    {
+        return -1.0f;
     }
 }
 
@@ -85,7 +122,7 @@ void PitchDetection::updatePitch()
     float* yin = yinData_.getWritePointer(0);
     const float* input = inputBuffer_.getReadPointer(0);
     
-    float detectedPitch_ = -1.0;
+    float detectedPitch = -1.0;
     
     yin[0] = 1.0;
     for (tau = 1; tau < yinData_.getNumSamples(); tau++)
@@ -110,17 +147,21 @@ void PitchDetection::updatePitch()
         period = tau - 3;
         if (tau > 4 && yin[period] < tolerance_ && yin[period] < yin[period+1])
         {
-            detectedPitch_ = quadIntMin(period);
+            detectedPitch = quadIntMin(period);
             break;
         }
     }
     
-    if (detectedPitch_ < 0.0)
+    if (detectedPitch < 0.0)
     {
         // Run Quadtatic Interpolation on minimum element
         float* minElement = std::min(yin, yin + yinData_.getNumSamples());
-        detectedPitch_ = quadIntMin(minElement - yin);
+        detectedPitch = quadIntMin(minElement - yin);
     }
     
-    pitch_ = detectedPitch_;
+    pitch_ = detectedPitch;
+
+    // Update the f0 pointer and write to detected pitch array
+    f0Pointer_ = (f0Pointer_ + 1) % maxFreqSmoothing;
+    detectedF0_.insert(f0Pointer_, pitch_);
 }

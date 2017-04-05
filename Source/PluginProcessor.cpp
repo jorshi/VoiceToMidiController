@@ -246,7 +246,7 @@ void VoiceToMidiControllerAudioProcessor::setStateInformation (const void* data,
 //==============================================================================
 float VoiceToMidiControllerAudioProcessor::getDetectedF0()
 {
-    float pitch = pitchDetection_->getPitch();
+    float pitch = pitchDetection_->getSmoothedPitch(1);
     
     if (pitch > 0)
     {
