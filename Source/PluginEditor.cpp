@@ -19,6 +19,16 @@ VoiceToMidiControllerAudioProcessorEditor::VoiceToMidiControllerAudioProcessorEd
 
     startTimer(50);
     setSize (400, 300);
+    
+    // Create the pitch smoothing slider and connect to the parameters
+    addAndMakeVisible(&pitchSmoothingSlider);
+    addAndMakeVisible(&pitchSmoothingLabel);
+    pitchSmoothingLabel.setText("Pitch Smoothing", dontSendNotification);
+    pitchSmoothingLabel.attachToComponent(&pitchSmoothingSlider, false);
+    AudioProcessorValueTreeState* parameters = processor.getParameters();
+    pitchSmoothingAttachment = new SliderAttachment(*parameters,
+                                                    "pitch_smoothing",
+                                                    pitchSmoothingSlider);
 }
 
 VoiceToMidiControllerAudioProcessorEditor::~VoiceToMidiControllerAudioProcessorEditor()
@@ -39,6 +49,7 @@ void VoiceToMidiControllerAudioProcessorEditor::paint (Graphics& g)
 
 void VoiceToMidiControllerAudioProcessorEditor::resized()
 {
+    pitchSmoothingSlider.setBounds(10, 200, 250, 20);
 }
 
 

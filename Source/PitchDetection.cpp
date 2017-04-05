@@ -60,7 +60,10 @@ void PitchDetection::runDetection(const float *samples, int numSamples)
 
 float PitchDetection::getSmoothedPitch(int smoothingFactor) const
 {
+    // Max smoothing range as defined in the parameters
     smoothingFactor = std::min(smoothingFactor, (int)maxFreqSmoothing);
+    
+    // Return the current detected pitch if the smoothing factor is small
     if (smoothingFactor < 2)
     {
         return getCurrentPitch();
@@ -71,16 +74,18 @@ float PitchDetection::getSmoothedPitch(int smoothingFactor) const
     float pitch;
     float smoothed;
 
+    // Calculate moving average, only consider non-zero pitch calculations
     for (int i = 0; i < smoothingFactor; ++i)
     {
         pitch = detectedF0_[(f0Pointer_ - i) % detectedF0_.size()];
-        if (pitch >= 0)
+        if (pitch > 0)
         {
             sum += pitch;
             avgNum++;
         }
     }
     
+    // Return the smoothed pitch if one was found
     smoothed = sum / avgNum;
     if (smoothed > 0)
     {

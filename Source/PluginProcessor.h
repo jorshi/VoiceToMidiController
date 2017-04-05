@@ -62,6 +62,8 @@ public:
     
     float getDetectedF0();
     int getDetectedMidiNote();
+    
+    AudioProcessorValueTreeState* getParameters() const { return parameters_; };
 
 private:
     //==============================================================================
@@ -69,6 +71,7 @@ private:
     
     ScopedPointer<MidiOutput> midiOutput_;
     ScopedPointer<PitchDetection> pitchDetection_;
+    ScopedPointer<AudioProcessorValueTreeState> parameters_;
     
     // Midi messages to facilitate switching between notes
     MidiMessage playingNote;

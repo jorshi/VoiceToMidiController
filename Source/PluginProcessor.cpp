@@ -58,6 +58,15 @@ VoiceToMidiControllerAudioProcessor::VoiceToMidiControllerAudioProcessor()
     // Create a new device
     midiOutput_ = MidiOutput::createNewDevice("VoiceToMidi " + std::to_string(instance));
     
+    // Parameters
+    parameters_ = new AudioProcessorValueTreeState(*this, nullptr);
+    
+    parameters_->createAndAddParameter("pitch_smoothing",
+                                       "Pitch Smoothing",
+                                       String(),
+                                       NormalisableRange<float>(1.0f, 25.0f, 1.0f),
+                                       1.0f, nullptr, nullptr);
+
     #endif
 }
 
@@ -246,7 +255,8 @@ void VoiceToMidiControllerAudioProcessor::setStateInformation (const void* data,
 //==============================================================================
 float VoiceToMidiControllerAudioProcessor::getDetectedF0()
 {
-    float pitch = pitchDetection_->getSmoothedPitch(4);
+    int smoothing = (int)*parameters_->getRawParameterValue("pitch_smoothing");
+    float pitch = pitchDetection_->getSmoothedPitch(smoothing);
     
     if (pitch > 0)
     {
