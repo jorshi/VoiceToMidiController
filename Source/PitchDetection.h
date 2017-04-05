@@ -51,14 +51,14 @@ private:
     // Read pointer for input buffer
     int readPos_;
 
-    // Pitch tolerance and the current detected pitch estimation
+    // Pitch tolerance
     float tolerance_;
-    float pitch_;
 
     // Buffer used in calculation of pitch
     AudioBuffer<float> yinData_;
     AudioBuffer<float> inputBuffer_;
     
+    // Buffer for moving average of detected pitches
     Array<float> detectedF0_;
     int f0Pointer_;
 };

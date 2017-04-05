@@ -21,8 +21,7 @@ PitchDetection::PitchDetection(int bufferSize) : readPos_(0)
     // YIN default tolerance was 0.15
     tolerance_ = 0.15;
     
-    pitch_ = -1.0;
-    
+    // Detected pitch buffer
     detectedF0_.resize(maxFreqSmoothing);
     std::fill(detectedF0_.begin(), detectedF0_.end(), -1.0);
     f0Pointer_ = 0;
@@ -164,10 +163,8 @@ void PitchDetection::updatePitch()
         float* minElement = std::min(yin, yin + yinData_.getNumSamples());
         detectedPitch = quadIntMin(minElement - yin);
     }
-    
-    pitch_ = detectedPitch;
 
     // Update the f0 pointer and write to detected pitch array
     f0Pointer_ = (f0Pointer_ + 1) % maxFreqSmoothing;
-    detectedF0_.insert(f0Pointer_, pitch_);
+    detectedF0_.insert(f0Pointer_, detectedPitch);
 }
