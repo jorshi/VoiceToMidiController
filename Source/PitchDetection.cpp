@@ -24,6 +24,7 @@ PitchDetection::PitchDetection(int bufferSize) : readPos_(0)
     pitch_ = -1.0;
     
     detectedF0_.resize(maxFreqSmoothing);
+    std::fill(detectedF0_.begin(), detectedF0_.end(), -1.0);
     f0Pointer_ = 0;
 }
 
@@ -72,7 +73,7 @@ float PitchDetection::getSmoothedPitch(int smoothingFactor) const
 
     for (int i = 0; i < smoothingFactor; ++i)
     {
-        pitch = detectedF0_[(f0Pointer_ + i) % detectedF0_.size()];
+        pitch = detectedF0_[(f0Pointer_ - i) % detectedF0_.size()];
         if (pitch >= 0)
         {
             sum += pitch;
