@@ -267,7 +267,7 @@ int VoiceToMidiControllerAudioProcessor::getDetectedMidiNote()
     
     if (pitch > 0.0f)
     {
-        midiNote = roundToInt(69 + 12*log2(pitch / 440));
+        midiNote = std::min(roundToInt(69 + 12*log2(pitch / 440)), 127);
     }
     else
     {
