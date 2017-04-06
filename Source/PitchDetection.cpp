@@ -76,7 +76,7 @@ float PitchDetection::getSmoothedPitch(int smoothingFactor) const
     // Calculate moving average, only consider non-zero pitch calculations
     for (int i = 0; i < smoothingFactor; ++i)
     {
-        pitch = detectedF0_[(f0Pointer_ - i) % detectedF0_.size()];
+        pitch = detectedF0_[negativeAwareModulo(f0Pointer_ - i, detectedF0_.size())];
         if (pitch > 0)
         {
             sum += pitch;
