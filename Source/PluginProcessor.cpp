@@ -67,7 +67,7 @@ VoiceToMidiControllerAudioProcessor::VoiceToMidiControllerAudioProcessor()
                                        NormalisableRange<float>(1.0f, 25.0f, 1.0f),
                                        1.0f, nullptr, nullptr);
 
-    dbRange_ = NormalisableRange<float>(-80, -6);
+    dbRange_ = NormalisableRange<float>(-60, 0);
     
     #endif
 }
