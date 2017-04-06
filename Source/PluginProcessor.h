@@ -64,6 +64,7 @@ public:
     int getDetectedMidiNote();
     
     AudioProcessorValueTreeState* getParameters() const { return parameters_; };
+    int dbToVelocity(float db);
 
 private:
     //==============================================================================
@@ -82,6 +83,8 @@ private:
     
     const double startTime;
     double noteTime;
+    
+    NormalisableRange<float> dbRange_;
 };
 
 

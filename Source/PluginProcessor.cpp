@@ -58,6 +58,8 @@ VoiceToMidiControllerAudioProcessor::VoiceToMidiControllerAudioProcessor()
     // Create a new device
     midiOutput_ = MidiOutput::createNewDevice("VoiceToMidi " + std::to_string(instance));
     
+    #endif
+
     // Parameters
     parameters_ = new AudioProcessorValueTreeState(*this, nullptr);
     
@@ -67,7 +69,8 @@ VoiceToMidiControllerAudioProcessor::VoiceToMidiControllerAudioProcessor()
                                        NormalisableRange<float>(1.0f, 25.0f, 1.0f),
                                        1.0f, nullptr, nullptr);
 
-    #endif
+    // dB range considered for conversion to MIDI values
+    dbRange_ = NormalisableRange<float>(-80, -6);
 }
 
 VoiceToMidiControllerAudioProcessor::~VoiceToMidiControllerAudioProcessor()
@@ -177,12 +180,10 @@ void VoiceToMidiControllerAudioProcessor::processBlock (AudioSampleBuffer& buffe
     // this code if your algorithm always overwrites all the output channels.
     for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
-
-    // Processing block
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        float* channelData = buffer.getWritePointer (channel);
-    }
+    
+    // Get RMS level and convert to dB
+    float rms = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
+    rms = 20 * std::log10(rms);
     
     // Pass samples in for pitch detection -- only run on the first channel right now
     pitchDetection_->runDetection(buffer.getReadPointer(0), buffer.getNumSamples());
@@ -196,14 +197,14 @@ void VoiceToMidiControllerAudioProcessor::processBlock (AudioSampleBuffer& buffe
         // Not currently playing a note, make a new one
         if (!isPlaying)
         {
-            playingNote = MidiMessage::noteOn(1, midiNote, (uint8)100);
+            playingNote = MidiMessage::noteOn(1, midiNote, (uint8)dbToVelocity(rms));
             playingNote.setTimeStamp(timeNow - startTime);
             midiMessages.addEvent(playingNote, 0);
             isPlaying = true;
         }
         else if (midiNote != playingNote.getNoteNumber())
         {
-            nextNote = MidiMessage::noteOn(1, midiNote, (uint8)100);
+            nextNote = MidiMessage::noteOn(1, midiNote, (uint8)dbToVelocity(rms));
             nextNote.setTimeStamp(timeNow - startTime);
             midiMessages.addEvent(nextNote, 0);
           
@@ -287,7 +288,11 @@ int VoiceToMidiControllerAudioProcessor::getDetectedMidiNote()
     return midiNote;
 }
 
-
+int VoiceToMidiControllerAudioProcessor::dbToVelocity(float db)
+{
+    db = dbRange_.snapToLegalValue(db);
+    return std::round(dbRange_.convertTo0to1(db) * 127);
+}
 
 //==============================================================================
 // This creates new instances of the plugin..
