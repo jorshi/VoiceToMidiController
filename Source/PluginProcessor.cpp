@@ -28,9 +28,9 @@ VoiceToMidiControllerAudioProcessor::VoiceToMidiControllerAudioProcessor()
     // Not playing on startup
     isPlaying = false;
     
-    // Pitch detection object
+    // Pitch and timbre detection
     pitchDetection_ = new PitchDetection(1024);
-    
+    timbreSimple_ = new TimbreSimple(1024);
     
     // Only output on virtual midi port if this is not windows
     #if JUCE_LINUX || JUCE_MAC || JUCE_IOS || DOXYGEN
@@ -132,8 +132,8 @@ void VoiceToMidiControllerAudioProcessor::changeProgramName (int index, const St
 //==============================================================================
 void VoiceToMidiControllerAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    // Update sample rate
+    TimbreSimple::setRate(sampleRate);
 }
 
 void VoiceToMidiControllerAudioProcessor::releaseResources()
@@ -186,6 +186,7 @@ void VoiceToMidiControllerAudioProcessor::processBlock (AudioSampleBuffer& buffe
     
     // Pass samples in for pitch detection -- only run on the first channel right now
     pitchDetection_->runDetection(buffer.getReadPointer(0), buffer.getNumSamples());
+    timbreSimple_->run(buffer.getReadPointer(0), buffer.getNumSamples());
  
     // Crude onset detection using changes in the pitch.
     int midiNote;
