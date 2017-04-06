@@ -19,12 +19,13 @@ TimbreSimple::TimbreSimple(int fftSize) : spectralCentroid_(0.0f), readPos_(0)
     // Forward FFT
     fft_ = new FFT(std::log2(fftSize), false);
     
-    // Update the input buffer size
+    // Update buffer sizes
     inputBuffer_.setSize(1, fftSize);
-    fftBuffer_.setSize(1, fftSize);
+    fftInput_.resize(fftSize);
+    fftOutput_.resize(fftSize);
     
     // Range of accepted timbre ratios -- this is just a guess right now
-    timbreRange_ = NormalisableRange<float>(20.0f, 500.0f);
+    timbreRange_ = NormalisableRange<float>(0.0f, 20.0f);
 }
 
 
@@ -57,19 +58,25 @@ void TimbreSimple::run(const float *samples, int numSamples)
 void TimbreSimple::updateCentroid()
 {
     // Perform forward FFT on input samples -- performed in place
-    fftBuffer_.copyFrom(0, 0, inputBuffer_, 0, 0, inputBuffer_.getNumSamples());
-    fft_->performFrequencyOnlyForwardTransform(fftBuffer_.getWritePointer(0));
+    const float* sample = inputBuffer_.getReadPointer(0);
+    for (int i = 0; i < inputBuffer_.getNumSamples(); i++)
+    {
+        fftInput_[i].r = sample[i];
+        fftInput_[i].i = 0;
+    }
+    
+    fft_->perform(fftInput_.data(), fftOutput_.data());
     
     float weightedSum = 0.0f;
     float sum = 0.0f;
-    const float* sample = inputBuffer_.getReadPointer(0);
+    float mag;
     
     // Calculate summations for spectral centroid
-    for (int i = 0; i < inputBuffer_.getNumSamples(); i++)
+    for (int i = 0; i < fftOutput_.size() / 2; i++)
     {
-        weightedSum += (*sample) * i;
-        sum += (*sample);
-        ++sample;;
+        mag = sqrt(fftOutput_[i].r * fftOutput_[i].r + fftOutput_[i].i * fftOutput_[i].i);
+        weightedSum += mag * i;
+        sum += mag;
     }
     
     spectralCentroid_ = weightedSum / sum;
