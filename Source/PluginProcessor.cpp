@@ -70,7 +70,7 @@ VoiceToMidiControllerAudioProcessor::VoiceToMidiControllerAudioProcessor()
                                        1.0f, nullptr, nullptr);
 
     // dB range considered for conversion to MIDI values
-    dbRange_ = NormalisableRange<float>(-80, -6);
+    dbRange_ = NormalisableRange<float>(-60, 0);
 }
 
 VoiceToMidiControllerAudioProcessor::~VoiceToMidiControllerAudioProcessor()
