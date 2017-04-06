@@ -11,7 +11,7 @@
 #include "TimbreSimple.h"
 
 
-TimbreSimple::TimbreSimple(int fftSize) : spectralCentroid_(0.0f)
+TimbreSimple::TimbreSimple(int fftSize) : spectralCentroid_(0.0f), readPos_(0)
 {
     // Make sure this is a power of 2
     fftSize_ = nextPowerOfTwo(fftSize);
@@ -19,7 +19,12 @@ TimbreSimple::TimbreSimple(int fftSize) : spectralCentroid_(0.0f)
     // Forward FFT
     fft_ = new FFT(std::log2(fftSize), false);
     
+    // Update the input buffer size
     inputBuffer_.setSize(1, fftSize);
+    fftBuffer_.setSize(1, fftSize);
+    
+    // Range of accepted timbre ratios -- this is just a guess right now
+    timbreRange_ = NormalisableRange<float>(20.0f, 500.0f);
 }
 
 
@@ -52,7 +57,8 @@ void TimbreSimple::run(const float *samples, int numSamples)
 void TimbreSimple::updateCentroid()
 {
     // Perform forward FFT on input samples -- performed in place
-    fft_->performFrequencyOnlyForwardTransform(inputBuffer_.getWritePointer(0));
+    fftBuffer_.copyFrom(0, 0, inputBuffer_, 0, 0, inputBuffer_.getNumSamples());
+    fft_->performFrequencyOnlyForwardTransform(fftBuffer_.getWritePointer(0));
     
     float weightedSum = 0.0f;
     float sum = 0.0f;
@@ -68,6 +74,25 @@ void TimbreSimple::updateCentroid()
     
     spectralCentroid_ = weightedSum / sum;
 }
+
+
+float TimbreSimple::getCurrentCentroid() const
+{
+    return spectralCentroid_ * (rate_ / fftSize_);
+}
+
+
+int TimbreSimple::getTimbreAsMidiValue(float f0) const
+{
+    if (f0 > 0)
+    {
+        float timbreRatio = timbreRange_.snapToLegalValue(getCurrentCentroid() / f0);
+        return timbreRange_.convertTo0to1(timbreRatio) * 127;
+    }
+
+    return 0;
+}
+
 
 // Default rate -- but it will need to be set from the processor
 float TimbreSimple::rate_ = 44100.0f;
