@@ -51,6 +51,7 @@ private:
     
     // Buffer to store up samples and pointer to current position
     AudioBuffer<float> inputBuffer_;
+    AudioBuffer<float> hann_;
     std::vector<FFT::Complex> fftInput_;
     std::vector<FFT::Complex> fftOutput_;
     int readPos_;
@@ -60,6 +61,8 @@ private:
     
     // Sampling Rate
     static float rate_;
+    
+    float smoothingConstant_;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TimbreSimple)
 };

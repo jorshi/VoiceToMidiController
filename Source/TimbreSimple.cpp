@@ -21,11 +21,20 @@ TimbreSimple::TimbreSimple(int fftSize) : spectralCentroid_(0.0f), readPos_(0)
     
     // Update buffer sizes
     inputBuffer_.setSize(1, fftSize);
+    hann_.setSize(1, fftSize);
     fftInput_.resize(fftSize);
     fftOutput_.resize(fftSize);
     
     // Range of accepted timbre ratios -- this is just a guess right now
-    timbreRange_ = NormalisableRange<float>(0.0f, 20.0f);
+    timbreRange_ = NormalisableRange<float>(1.0f, 7.0f);
+ 
+    // Pre-calculate a Hann window
+    float* sample = hann_.getWritePointer(0);
+    int N = hann_.getNumSamples();
+    for (int i = 0; i < N; i++)
+    {
+        sample[i] = 0.5 - 0.5 * cos((2 * double_Pi * i) / (N-1));
+    }
 }
 
 
@@ -59,9 +68,10 @@ void TimbreSimple::updateCentroid()
 {
     // Perform forward FFT on input samples -- performed in place
     const float* sample = inputBuffer_.getReadPointer(0);
+    const float* window = hann_.getReadPointer(0);
     for (int i = 0; i < inputBuffer_.getNumSamples(); i++)
     {
-        fftInput_[i].r = sample[i];
+        fftInput_[i].r = sample[i] * window[i];
         fftInput_[i].i = 0;
     }
     
@@ -79,7 +89,21 @@ void TimbreSimple::updateCentroid()
         sum += mag;
     }
     
-    spectralCentroid_ = weightedSum / sum;
+    if (!(sum > 0))
+    {
+        return;
+    }
+    
+    // Smooth centroid
+    float centroid = weightedSum / sum;
+    if (centroid > spectralCentroid_)
+    {
+        spectralCentroid_ = (0.99 * centroid) + (0.01 * spectralCentroid_);
+    }
+    else
+    {
+        spectralCentroid_ = (0.11 * centroid) + (0.89 * spectralCentroid_);
+    }
 }
 
 
