@@ -29,9 +29,16 @@ public:
     // Static method to set sampling rate
     static void setRate(float rate) { rate_ = rate; };
     
+    // Returns the current centroid as a frequency
+    float getCurrentCentroid() const;
+    
+    // Get a timbre ratio value as a midi value
+    int getTimbreAsMidiValue(float f0) const;
+    
     
 private:
     
+    // Update the centroid calculation with sampels from the input buffer
     void updateCentroid();
     
     // Current spectral centroid
@@ -43,7 +50,11 @@ private:
     
     // Buffer to store up samples and pointer to current position
     AudioBuffer<float> inputBuffer_;
+    AudioBuffer<float> fftBuffer_;
     int readPos_;
+    
+    // Range of acceptable timbre ratios
+    NormalisableRange<float> timbreRange_;
     
     // Sampling Rate
     static float rate_;

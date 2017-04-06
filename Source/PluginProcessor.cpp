@@ -194,6 +194,10 @@ void VoiceToMidiControllerAudioProcessor::processBlock (AudioSampleBuffer& buffe
     {
         double timeNow = Time::getMillisecondCounterHiRes() * 0.001;
         
+        // Output timbre as modulation
+        int timbre = timbreSimple_->getTimbreAsMidiValue(getDetectedF0());
+        midiMessages.addEvent(MidiMessage::controllerEvent(1, 1, (uint8)timbre), 2);
+        
         // Not currently playing a note, make a new one
         if (!isPlaying)
         {
@@ -220,6 +224,9 @@ void VoiceToMidiControllerAudioProcessor::processBlock (AudioSampleBuffer& buffe
         midiMessages.addEvent(MidiMessage::noteOff(playingNote.getChannel(),
                                                    playingNote.getNoteNumber()), 1);
         isPlaying = false;
+        
+        // Turn off modulation?
+        midiMessages.addEvent(MidiMessage::controllerEvent(1, 1, 0), 2);
     }
 
     // Send out on the virtual midi port if it is available
