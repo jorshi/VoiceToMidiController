@@ -12,6 +12,7 @@
 #define TIMBRESIMPLE_H_INCLUDED
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include <vector>
 
 class TimbreSimple
 {
@@ -50,7 +51,8 @@ private:
     
     // Buffer to store up samples and pointer to current position
     AudioBuffer<float> inputBuffer_;
-    AudioBuffer<float> fftBuffer_;
+    std::vector<FFT::Complex> fftInput_;
+    std::vector<FFT::Complex> fftOutput_;
     int readPos_;
     
     // Range of acceptable timbre ratios
@@ -58,7 +60,6 @@ private:
     
     // Sampling Rate
     static float rate_;
-    
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TimbreSimple)
 };
