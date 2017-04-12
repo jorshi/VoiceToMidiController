@@ -12,6 +12,10 @@
               pluginAAXCategory="AAX_ePlugInCategory_Dynamics" jucerVersion="4.3.1">
   <MAINGROUP id="V6je0U" name="VoiceToMidiController">
     <GROUP id="{3A5063AC-C957-4AF1-C28A-15FA24E3A48A}" name="Source">
+      <FILE id="Y2SFtt" name="LoomLookAndFeel.cpp" compile="1" resource="0"
+            file="Source/LoomLookAndFeel.cpp"/>
+      <FILE id="umGLCl" name="LoomLookAndFeel.h" compile="0" resource="0"
+            file="Source/LoomLookAndFeel.h"/>
       <FILE id="mKdyHx" name="TimbreSimple.cpp" compile="1" resource="0"
             file="Source/TimbreSimple.cpp"/>
       <FILE id="xSj2Bi" name="TimbreSimple.h" compile="0" resource="0" file="Source/TimbreSimple.h"/>
