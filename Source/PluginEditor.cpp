@@ -25,7 +25,7 @@ VoiceToMidiControllerAudioProcessorEditor::VoiceToMidiControllerAudioProcessorEd
     timbreLearning.setClickingTogglesState(true);
     timbreLearning.setToggleState(false, dontSendNotification);
     timbreLearning.addListener(this);
-    
+
     AudioProcessorValueTreeState* parameters = processor.getParameters();
     
     // Create the pitch smoothing slider and connect to the parameters
