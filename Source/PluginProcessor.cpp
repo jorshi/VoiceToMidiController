@@ -55,7 +55,7 @@ VoiceToMidiControllerAudioProcessor::VoiceToMidiControllerAudioProcessor()
     midiOutput_ = MidiOutput::createNewDevice("VoiceToMidi " + std::to_string(instance));
     
     #endif
-    
+
     // Parameters
     parameters_ = new AudioProcessorValueTreeState(*this, nullptr);
     
@@ -80,6 +80,7 @@ VoiceToMidiControllerAudioProcessor::VoiceToMidiControllerAudioProcessor()
     pitchDetection_ = new PitchDetection(1024);
     timbreSimple_ = new TimbreSimple(1024, parameters_);
 
+    // dB range considered for conversion to MIDI values
     dbRange_ = NormalisableRange<float>(-60, 0);
 }
 
