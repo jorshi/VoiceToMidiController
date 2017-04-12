@@ -30,7 +30,20 @@ public:
     void resized() override;
 
 private:
+    typedef AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
+    
     void timerCallback() override;
+    
+    // Sliders
+    Slider pitchSmoothingSlider;
+    
+    // Attachments
+    ScopedPointer<SliderAttachment> pitchSmoothingAttachment;
+    
+    // Labels
+    Label pitchSmoothingLabel;
+    
+    
     
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
