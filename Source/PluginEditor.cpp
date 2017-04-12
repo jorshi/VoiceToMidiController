@@ -123,7 +123,7 @@ void VoiceToMidiControllerAudioProcessorEditor::resized()
     int topOffset = 60;
     timbreAttackSlider.setBounds(timbreArea.getX() + 10, timbreArea.getY() + topOffset, 90, 65);
     timbreReleaseSlider.setBounds(timbreArea.getX() + 120, timbreArea.getY() + topOffset, 90, 65);
-    timbreLearning.setBounds(timbreArea.getX() + 245, timbreArea.getY() + topOffset + 15, 175, 25);
+    timbreLearning.setBounds(timbreArea.getX() + 255, timbreArea.getY() + topOffset + 10, 175, 35);
 }
 
 
