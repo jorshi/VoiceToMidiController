@@ -18,8 +18,9 @@
 //==============================================================================
 /**
 */
-class VoiceToMidiControllerAudioProcessorEditor  : public AudioProcessorEditor,
-                                                   private Timer
+class VoiceToMidiControllerAudioProcessorEditor  :  public AudioProcessorEditor,
+                                                    public ButtonListener,
+                                                    private Timer
 {
 public:
     VoiceToMidiControllerAudioProcessorEditor (VoiceToMidiControllerAudioProcessor&);
@@ -28,11 +29,16 @@ public:
     //==============================================================================
     void paint (Graphics&) override;
     void resized() override;
+    
+    void buttonClicked(Button* button) override;
 
 private:
     typedef AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
     
     void timerCallback() override;
+    
+    // Buttons
+    TextButton timbreLearning;
     
     // Sliders
     Slider pitchSmoothingSlider;

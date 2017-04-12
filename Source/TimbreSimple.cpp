@@ -11,22 +11,24 @@
 #include "TimbreSimple.h"
 
 
-TimbreSimple::TimbreSimple(int fftSize) : spectralCentroid_(0.0f), readPos_(0)
+TimbreSimple::TimbreSimple(int fftSize) : readPos_(0)
 {
     // Make sure this is a power of 2
     fftSize_ = nextPowerOfTwo(fftSize);
     
     // Forward FFT
-    fft_ = new FFT(std::log2(fftSize), false);
+    fft_ = new FFT(std::log2(fftSize_), false);
     
     // Update buffer sizes
-    inputBuffer_.setSize(1, fftSize);
-    hann_.setSize(1, fftSize);
-    fftInput_.resize(fftSize);
-    fftOutput_.resize(fftSize);
+    inputBuffer_.setSize(1, fftSize_);
+    hann_.setSize(1, fftSize_);
+    fftInput_.resize(fftSize_);
+    fftOutput_.resize(fftSize_);
+    magnitude_.resize(fftSize_/2);
     
     // Range of accepted timbre ratios -- this is just a guess right now
     timbreRange_ = NormalisableRange<float>(1.0f, 7.0f);
+    timbreRatio_ = timbreRange_.start;
  
     // Pre-calculate a Hann window
     float* sample = hann_.getWritePointer(0);
@@ -35,6 +37,8 @@ TimbreSimple::TimbreSimple(int fftSize) : spectralCentroid_(0.0f), readPos_(0)
     {
         sample[i] = 0.5 - 0.5 * cos((2 * double_Pi * i) / (N-1));
     }
+    
+    isLearningRange_ = false;
 }
 
 
@@ -50,7 +54,7 @@ void TimbreSimple::run(const float *samples, int numSamples)
         // Accumulated enough samples to perform pitch
         if (readPos_ >= inputBuffer_.getNumSamples())
         {
-            updateCentroid();
+            updateSpectrum();
             readPos_ = 0;
         }
         else
@@ -64,7 +68,7 @@ void TimbreSimple::run(const float *samples, int numSamples)
 }
 
 
-void TimbreSimple::updateCentroid()
+void TimbreSimple::updateSpectrum()
 {
     // Perform forward FFT on input samples -- performed in place
     const float* sample = inputBuffer_.getReadPointer(0);
@@ -77,51 +81,86 @@ void TimbreSimple::updateCentroid()
     
     fft_->perform(fftInput_.data(), fftOutput_.data());
     
-    float weightedSum = 0.0f;
-    float sum = 0.0f;
-    float mag;
-    
     // Calculate summations for spectral centroid
     for (int i = 0; i < fftOutput_.size() / 2; i++)
     {
-        mag = sqrt(fftOutput_[i].r * fftOutput_[i].r + fftOutput_[i].i * fftOutput_[i].i);
-        weightedSum += mag * i;
-        sum += mag;
-    }
-    
-    if (!(sum > 0))
-    {
-        return;
-    }
-    
-    // Smooth centroid
-    float centroid = weightedSum / sum;
-    if (centroid > spectralCentroid_)
-    {
-        spectralCentroid_ = (0.99 * centroid) + (0.01 * spectralCentroid_);
-    }
-    else
-    {
-        spectralCentroid_ = (0.11 * centroid) + (0.89 * spectralCentroid_);
+        magnitude_[i] = sqrt(fftOutput_[i].r * fftOutput_[i].r + fftOutput_[i].i * fftOutput_[i].i);
     }
 }
 
 
-float TimbreSimple::getCurrentCentroid() const
-{
-    return spectralCentroid_ * (rate_ / fftSize_);
-}
-
-
-int TimbreSimple::getTimbreAsMidiValue(float f0) const
+int TimbreSimple::filteredTimbre(float f0)
 {
     if (f0 > 0)
     {
-        float timbreRatio = timbreRange_.snapToLegalValue(getCurrentCentroid() / f0);
-        return timbreRange_.convertTo0to1(timbreRatio) * 127;
-    }
+        // Get the magnitude bins from current FFT based on the current detected pitch
+        float binFreq = rate_ / fftSize_;
+        int lowerBin = std::floor((f0*2) / binFreq);
+        int upperBin = std::ceil((f0*8) / binFreq);
+        
+        // Sum and weighted some for spectral centroid calculation
+        float sum = 0.0f;
+        float weightedSum = 0.0f;
+        
+        // Spectral centroid on filtered portion of the magnitude spectrum
+        for (int i = lowerBin; i <= upperBin; i++)
+        {
+            weightedSum += magnitude_[i] * i;
+            sum += magnitude_[i];
+        }
+        
+        // Spectral centroid and the ratio with respect to the detected F0
+        float centroid = (weightedSum / sum) * binFreq;
+        float ratio = centroid / f0;
+        
+        if (!isLearningRange_)
+        {
+            // Simple smoothing function for timbre
+            if (ratio > timbreRatio_)
+            {
+                timbreRatio_ = (0.99 * ratio) + (0.01 * timbreRatio_);
+            }
+            else
+            {
+                timbreRatio_ = (0.11 * ratio) + (0.89 * timbreRatio_);
+            }
+            
+            // Convert to MIDI value and return
+            ratio = timbreRange_.snapToLegalValue(timbreRatio_);
+            return timbreRange_.convertTo0to1(ratio) * 127;
+        }
+        else // Learning mode, continually update min and max values of detected ratios
+        {
+            // Update the range learning variables
+            if (ratio < learningMin_)
+            {
+                learningMin_ = ratio;
+            }
+            
+            if (ratio > learningMax_)
+            {
+                learningMax_ = ratio;
+            }
 
+            return 0;
+        }
+
+    }
+    
     return 0;
+}
+
+void TimbreSimple::startLearning()
+{
+    isLearningRange_ = true;
+    learningMin_ = MAXFLOAT;
+    learningMax_ = 0.0f;
+}
+
+void TimbreSimple::stopLearning()
+{
+    timbreRange_ = NormalisableRange<float>(learningMin_, learningMax_);
+    isLearningRange_ = false;
 }
 
 

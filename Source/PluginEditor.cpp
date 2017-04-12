@@ -20,6 +20,12 @@ VoiceToMidiControllerAudioProcessorEditor::VoiceToMidiControllerAudioProcessorEd
     startTimer(50);
     setSize (400, 300);
     
+    addAndMakeVisible(&timbreLearning);
+    timbreLearning.setButtonText("Start Timbre Learning");
+    timbreLearning.setClickingTogglesState(true);
+    timbreLearning.setToggleState(false, dontSendNotification);
+    timbreLearning.addListener(this);
+    
     // Create the pitch smoothing slider and connect to the parameters
     addAndMakeVisible(&pitchSmoothingSlider);
     addAndMakeVisible(&pitchSmoothingLabel);
@@ -50,10 +56,26 @@ void VoiceToMidiControllerAudioProcessorEditor::paint (Graphics& g)
 void VoiceToMidiControllerAudioProcessorEditor::resized()
 {
     pitchSmoothingSlider.setBounds(10, 200, 250, 20);
+    timbreLearning.setBounds(10, 250, 100, 25);
 }
 
 
 void VoiceToMidiControllerAudioProcessorEditor::timerCallback()
 {
     repaint();
+}
+
+void VoiceToMidiControllerAudioProcessorEditor::buttonClicked(juce::Button *button)
+{
+    if (button == &timbreLearning)
+    {
+        if (button->getToggleState())
+        {
+            processor.startTimbreLearning();
+        }
+        else
+        {
+            processor.stopTimbreLearning();
+        }
+    }
 }
