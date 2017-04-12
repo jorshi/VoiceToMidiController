@@ -42,12 +42,18 @@ private:
     
     // Sliders
     Slider pitchSmoothingSlider;
+    Slider timbreAttackSlider;
+    Slider timbreReleaseSlider;
     
     // Attachments
     ScopedPointer<SliderAttachment> pitchSmoothingAttachment;
+    ScopedPointer<SliderAttachment> timbreAttackAttachment;
+    ScopedPointer<SliderAttachment> timbreReleaseAttachment;
     
     // Labels
     Label pitchSmoothingLabel;
+    Label timbreAttackLabel;
+    Label timbreReleaseLabel;
     
     
     

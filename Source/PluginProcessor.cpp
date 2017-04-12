@@ -28,10 +28,6 @@ VoiceToMidiControllerAudioProcessor::VoiceToMidiControllerAudioProcessor()
     // Not playing on startup
     isPlaying = false;
     
-    // Pitch and timbre detection
-    pitchDetection_ = new PitchDetection(1024);
-    timbreSimple_ = new TimbreSimple(1024);
-    
     // Only output on virtual midi port if this is not windows
     #if JUCE_LINUX || JUCE_MAC || JUCE_IOS || DOXYGEN
     
@@ -58,6 +54,8 @@ VoiceToMidiControllerAudioProcessor::VoiceToMidiControllerAudioProcessor()
     // Create a new device
     midiOutput_ = MidiOutput::createNewDevice("VoiceToMidi " + std::to_string(instance));
     
+    #endif
+    
     // Parameters
     parameters_ = new AudioProcessorValueTreeState(*this, nullptr);
     
@@ -66,10 +64,23 @@ VoiceToMidiControllerAudioProcessor::VoiceToMidiControllerAudioProcessor()
                                        String(),
                                        NormalisableRange<float>(1.0f, 25.0f, 1.0f),
                                        1.0f, nullptr, nullptr);
+    
+    parameters_->createAndAddParameter("timbre_attack",
+                                       "Timbre Attack",
+                                       "ms",
+                                       NormalisableRange<float>(0.0f, 1000.0f, 0.0f, 0.75f),
+                                       10.0f, nullptr, nullptr);
+    
+    parameters_->createAndAddParameter("timbre_release",
+                                       "Timbre Release",
+                                       "ms",
+                                       NormalisableRange<float>(0.0f, 1000.0f, 0.0f, 0.75f),
+                                       250.0f, nullptr, nullptr);
+    // Pitch and timbre detection
+    pitchDetection_ = new PitchDetection(1024);
+    timbreSimple_ = new TimbreSimple(1024, parameters_);
 
     dbRange_ = NormalisableRange<float>(-60, 0);
-    
-    #endif
 }
 
 VoiceToMidiControllerAudioProcessor::~VoiceToMidiControllerAudioProcessor()
@@ -134,6 +145,7 @@ void VoiceToMidiControllerAudioProcessor::prepareToPlay (double sampleRate, int 
 {
     // Update sample rate
     TimbreSimple::setRate(sampleRate);
+    TimbreSimple::setBuffer(samplesPerBlock);
 }
 
 void VoiceToMidiControllerAudioProcessor::releaseResources()

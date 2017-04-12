@@ -19,7 +19,7 @@ class TimbreSimple
 public:
     
     // Constructor
-    TimbreSimple(int fftSize);
+    TimbreSimple(int fftSize, AudioProcessorValueTreeState* p);
     
     // Deconstructor
     ~TimbreSimple() {};
@@ -27,8 +27,9 @@ public:
     // Run on new buffer
     void run(const float* samples, int numSamples);
     
-    // Static method to set sampling rate
+    // Static method to set sampling rate and buffer size
     static void setRate(float rate) { rate_ = rate; };
+    static void setBuffer(float buffer) { buffer_ = buffer; };
 
     // Run timbre analysis on input and return a midi value corresponding to that value
     int filteredTimbre(float f0);
@@ -50,6 +51,9 @@ private:
     ScopedPointer<FFT> fft_;
     int fftSize_;
     
+    // Link to the parameters
+    AudioProcessorValueTreeState* params_;
+    
     // Buffer to store up samples and pointer to current position
     AudioBuffer<float> inputBuffer_;
     AudioBuffer<float> hann_;
@@ -61,8 +65,9 @@ private:
     // Range of acceptable timbre ratios
     NormalisableRange<float> timbreRange_;
     
-    // Sampling Rate
+    // Sampling Rate & buffer size
     static float rate_;
+    static float buffer_;
     
     float smoothingConstant_;
     

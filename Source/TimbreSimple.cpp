@@ -11,10 +11,10 @@
 #include "TimbreSimple.h"
 
 
-TimbreSimple::TimbreSimple(int fftSize) : readPos_(0)
+TimbreSimple::TimbreSimple(int fftSize, AudioProcessorValueTreeState* p) : params_(p), readPos_(0)
 {
     // Make sure this is a power of 2
-    fftSize_ = nextPowerOfTwo(fftSize);
+    fftSize_ = isPowerOfTwo(fftSize) ? fftSize : nextPowerOfTwo(fftSize);
     
     // Forward FFT
     fft_ = new FFT(std::log2(fftSize_), false);
@@ -115,15 +115,19 @@ int TimbreSimple::filteredTimbre(float f0)
         
         if (!isLearningRange_)
         {
+            float smooth;
             // Simple smoothing function for timbre
             if (ratio > timbreRatio_)
             {
-                timbreRatio_ = (0.99 * ratio) + (0.01 * timbreRatio_);
+                smooth = (*params_->getRawParameterValue("timbre_attack"))/1000 ;
             }
             else
             {
-                timbreRatio_ = (0.11 * ratio) + (0.89 * timbreRatio_);
+                smooth = (*params_->getRawParameterValue("timbre_release"))/1000;
             }
+            
+            smooth = std::exp(-1.0f / (smooth * (rate_ / buffer_)));
+            timbreRatio_ = ((1 - smooth) * ratio) + (smooth * timbreRatio_);
             
             // Convert to MIDI value and return
             ratio = timbreRange_.snapToLegalValue(timbreRatio_);
@@ -159,10 +163,14 @@ void TimbreSimple::startLearning()
 
 void TimbreSimple::stopLearning()
 {
-    timbreRange_ = NormalisableRange<float>(learningMin_, learningMax_);
+    if (learningMin_ < MAXFLOAT && learningMin_ < learningMax_ && learningMax_ > 0.0f)
+    {
+        timbreRange_ = NormalisableRange<float>(learningMin_, learningMax_);
+    }
     isLearningRange_ = false;
 }
 
 
 // Default rate -- but it will need to be set from the processor
 float TimbreSimple::rate_ = 44100.0f;
+float TimbreSimple::buffer_ = 1024;
