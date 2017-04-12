@@ -66,6 +66,9 @@ public:
     
     AudioProcessorValueTreeState* getParameters() const { return parameters_; };
     int dbToVelocity(float db);
+    
+    void startTimbreLearning() { timbreSimple_->startLearning(); };
+    void stopTimbreLearning() { timbreSimple_->stopLearning(); };
 
 private:
     //==============================================================================
