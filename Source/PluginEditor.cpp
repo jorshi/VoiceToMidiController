@@ -92,7 +92,7 @@ void VoiceToMidiControllerAudioProcessorEditor::paint (Graphics& g)
     g.fillRect(header);
     
     g.setColour(Colour::fromRGB(40, 40, 40));
-    g.drawLine(timbreArea.getX(), timbreArea.getY(), timbreArea.getRight(), timbreArea.getY(), 2.0f);
+    g.drawLine(0, timbreArea.getY(), getWidth(), timbreArea.getY(), 2.0f);
     
     g.setColour(LoomLookAndFeel::buttonTextColour);
     g.setFont(header.getHeight() -10);
