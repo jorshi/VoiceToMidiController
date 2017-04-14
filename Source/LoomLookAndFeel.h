@@ -5,6 +5,9 @@
     Created: 18 Mar 2017 1:48:42am
     Author:  Jordie Shier 
 
+    This is a look and feel template from an existing project by the author.
+    Using this here for the colour scheme and button drawing.
+ 
   ==============================================================================
 */
 
@@ -38,23 +41,11 @@ public:
     static const Colour spectraColour;
     static const ColourGradient gradient;
     
-    // Custom Typeface
-    static const Typeface::Ptr daysOneTypeFace;
-    static const Typeface::Ptr zapfDingbatsTypeface;
-    
     void setButtonRadius(float radius) { buttonRadius = radius; };
 
 private:
     
     float buttonRadius;
-    
-
-    
-    
-    
 };
-
-
-
 
 #endif  // LOOMLOOKANDFEEL_H_INCLUDED
