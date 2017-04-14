@@ -68,13 +68,13 @@ VoiceToMidiControllerAudioProcessor::VoiceToMidiControllerAudioProcessor()
     parameters_->createAndAddParameter("timbre_attack",
                                        "Timbre Attack",
                                        "ms",
-                                       NormalisableRange<float>(0.0f, 1000.0f, 0.0f, 0.75f),
+                                       NormalisableRange<float>(1.0f, 1000.0f, 1.0f, 0.75f),
                                        10.0f, nullptr, nullptr);
     
     parameters_->createAndAddParameter("timbre_release",
                                        "Timbre Release",
                                        "ms",
-                                       NormalisableRange<float>(0.0f, 1000.0f, 0.0f, 0.75f),
+                                       NormalisableRange<float>(1.0f, 1000.0f, 1.0f, 0.75f),
                                        250.0f, nullptr, nullptr);
     // Pitch and timbre detection
     pitchDetection_ = new PitchDetection(1024);

@@ -13,6 +13,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "PluginProcessor.h"
+#include "LoomLookAndFeel.h"
 
 
 //==============================================================================
@@ -33,9 +34,22 @@ public:
     void buttonClicked(Button* button) override;
 
 private:
+    
     typedef AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
     
     void timerCallback() override;
+    
+    String midiNoteToString(int note);
+    
+    // Strings of pitches
+    const String noteMap[12] = {
+        "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"
+    };
+    
+    // Recatngle Areas
+    Rectangle<int> header;
+    Rectangle<int> pitchDisplay;
+    Rectangle<int> timbreArea;
     
     // Buttons
     TextButton timbreLearning;
@@ -55,7 +69,7 @@ private:
     Label timbreAttackLabel;
     Label timbreReleaseLabel;
     
-    
+    LoomLookAndFeel lookAndFeel;
     
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
