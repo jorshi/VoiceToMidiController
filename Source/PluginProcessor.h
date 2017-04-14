@@ -13,6 +13,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "PitchDetection.h"
+#include "TimbreSimple.h"
 
 #include <string>
 #include <sstream>
@@ -65,6 +66,9 @@ public:
     
     AudioProcessorValueTreeState* getParameters() const { return parameters_; };
     int dbToVelocity(float db);
+    
+    void startTimbreLearning() { timbreSimple_->startLearning(); };
+    void stopTimbreLearning() { timbreSimple_->stopLearning(); };
 
 private:
     //==============================================================================
@@ -73,6 +77,7 @@ private:
     ScopedPointer<MidiOutput> midiOutput_;
     ScopedPointer<PitchDetection> pitchDetection_;
     ScopedPointer<AudioProcessorValueTreeState> parameters_;
+    ScopedPointer<TimbreSimple> timbreSimple_;
     
     // Midi messages to facilitate switching between notes
     MidiMessage playingNote;
